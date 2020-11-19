@@ -39,7 +39,13 @@ const initApp = () => {
 };
 
 const loadListObject = () => {
-	// TODO 1:35
+	const storedList = localStorage.getItem("myToDoList");
+	if (typeof storedList !== "string") return;
+	const parsedList = JSON.parse(storedList);
+	parsedList.forEach((itemObj) => {
+		const newToDoItem = createNewItem(itemObj._id, itemObj._item);
+		todoList.addItemToList(newToDoItem);
+	});
 };
 
 const refreshThePage = () => {
@@ -92,12 +98,18 @@ const buildListItem = (item) => {
 
 const addClickListenerToCheckbox = (checkbox) => {
 	checkbox.addEventListener("click", (evt) => {
-		todoList.removeItemFromList(checkbox, id);
+		todoList.removeItemFromList(checkbox.id);
 		updatePersistentData(todoList.getList());
+		const removedText = getLabelText(checkbox.id);
+		updateScreenReaderConfirmation(removedText, "removed from list");
 		setTimeout(() => {
 			refreshThePage();
-		}, 1500);
+		}, 1000);
 	});
+};
+
+const getLabelText = (checkboxId) => {
+	return document.getElementById(checkboxId).nextElementSibling.textContent;
 };
 
 const updatePersistentData = (listArray) => {
@@ -119,6 +131,7 @@ const processSubmission = () => {
 	const todoItem = createNewItem(nextItemId, newEntryText);
 	todoList.addItemToList(todoItem);
 	updatePersistentData(todoList.getList());
+	updateScreenReaderConfirmation(newEntryText, "added");
 	refreshThePage();
 };
 
@@ -140,4 +153,10 @@ const createNewItem = (itemId, itemText) => {
 	todo.setId(itemId);
 	todo.setItem(itemText);
 	return todo;
+};
+
+const updateScreenReaderConfirmation = (newEntryText, actionVerb) => {
+	document.getElementById(
+		"confirmation"
+	).textContent = `${newEntryText} ${actionVerb}.`;
 };
